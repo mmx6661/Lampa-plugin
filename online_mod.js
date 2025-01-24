@@ -12637,7 +12637,7 @@
         zh: '在线的'
       },
       online_mod_title_full: {
-        ru: 'Онлайн Мод',
+        ru: 'MMX6661',
         uk: 'Онлайн Мод',
         be: 'Анлайн Мод',
         en: 'Online Mod',
