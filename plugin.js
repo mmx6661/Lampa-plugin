@@ -3,11 +3,10 @@ from lampa import Plugin, log
 class RezkaPlugin(Plugin):
     def __init__(self):
         # Простой пример плагина
-        self.plugin_name = "Rezka"  # Название плагина, отображаемое в интерфейсе Lampa
+        self.plugin_name = "Rezka"  # Название плагина для отображения в интерфейсе Lampa
 
-    # Инициализация плагина при запуске
     def on_start(self):
-        # Здесь можно показать простое сообщение или интерфейс
+        # Простейшая инициализация
         log.info(f"Плагин {self.plugin_name} активирован")
 
         # Пример простого UI с кнопками
@@ -16,15 +15,13 @@ class RezkaPlugin(Plugin):
             self.create_button("Выбрать озвучку", callback=self.select_audio)
         ])
 
-    # Callback для кнопки "Выбрать качество"
     def select_quality(self):
-        log.info("Выбрано качество")
-        # Здесь можно добавить логику для выбора качества
+        log.info("Выбрано качество")  # Логируем действие
+        # Логика выбора качества будет здесь
 
-    # Callback для кнопки "Выбрать озвучку"
     def select_audio(self):
-        log.info("Выбрана озвучка")
-        # Здесь можно добавить логику для выбора озвучки
+        log.info("Выбрана озвучка")  # Логируем действие
+        # Логика выбора озвучки будет здесь
 
 # Инициализация плагина
 plugin = RezkaPlugin()
