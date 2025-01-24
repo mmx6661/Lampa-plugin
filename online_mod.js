@@ -13488,7 +13488,7 @@
         dataType: 'text',
         withCredentials: true
       });
-    } ///////Онлайн Мод/////////
+    } ///////MMX6661/////////
 
 
     var template = "<div>";
