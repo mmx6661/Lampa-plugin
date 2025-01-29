@@ -1,0 +1,138 @@
+-- Frost DK Авто-ротация 3.3.5a (вкл/выкл + Ледяной удар)
+if not SDM_FrostDK then
+    SDM_FrostDK = {
+        active = false,
+        step = 0,
+        lastCast = 0
+    }
+    
+    SDM_FrostDK.frame = CreateFrame("Frame")
+    SDM_FrostDK.frame:SetScript("OnUpdate", function(self, elapsed)
+        if not SDM_FrostDK.active then return end
+        
+        -- Проверка цели
+        if not UnitExists("target") or UnitIsDead("target") or not UnitAffectingCombat("player") then
+            SDM_FrostDK.step = 0
+            return
+        end
+
+        -- Локальные функции
+        local function IsSpellReady(name)
+            local _, _, _, start, duration = GetSpellCooldown(name)
+            return (start == 0 and duration == 0) and IsUsableSpell(name)
+        end
+
+        local function GetRunicPower()
+            return UnitPower("player", 6) -- Runic Power (6-й тип ресурса)
+        end
+
+        local function GetDebuffTime(name)
+            local _, _, _, _, _, expires = UnitDebuff("target", name)
+            return expires and (expires - GetTime()) or 0
+        end
+
+        -- Обновление дебаффов
+        local function RefreshDebuffs()
+            local icyTime = GetDebuffTime("Слабость к магии льда")
+            local plagueTime = GetDebuffTime("Кровавая чума")
+
+            if (icyTime <= 3 or plagueTime <= 3) and IsSpellReady("Мор") then
+                CastSpellByName("Мор")
+                return true
+            end
+
+            if icyTime <= 3 and IsSpellReady("Ледяное прикосновение") then
+                CastSpellByName("Ледяное прикосновение")
+                return true
+            end
+
+            if plagueTime <= 3 and IsSpellReady("Чумной удар") then
+                CastSpellByName("Чумной удар")
+                return true
+            end
+
+            return false
+        end
+
+        -- Ротация для боссов
+        local function BossRotation()
+            if GetTime() - SDM_FrostDK.lastCast < 0.5 then return true end
+            
+            -- Проверка кулдаунов
+            if not IsSpellReady("Кровоотвод") 
+                or not IsSpellReady("Несокрушимая броня") 
+                or not IsSpellReady("Усиление рунического оружия") then
+                return false
+            end
+
+            -- Последовательность
+            if SDM_FrostDK.step == 0 then
+                CastSpellByName("Ледяное прикосновение")
+                SDM_FrostDK.step = 1
+            elseif SDM_FrostDK.step == 1 then
+                CastSpellByName("Чумной удар")
+                SDM_FrostDK.step = 2
+            elseif SDM_FrostDK.step == 2 then
+                CastSpellByName("Кровный удар")
+                SDM_FrostDK.step = 3
+            elseif SDM_FrostDK.step == 3 then
+                CastSpellByName("Уничтожение")
+                SDM_FrostDK.step = 4
+            elseif SDM_FrostDK.step == 4 then
+                CastSpellByName("Кровный удар")
+                SDM_FrostDK.step = 5
+            elseif SDM_FrostDK.step == 5 then
+                CastSpellByName("Кровоотвод")
+                SDM_FrostDK.step = 6
+            elseif SDM_FrostDK.step == 6 then
+                CastSpellByName("Несокрушимая броня")
+                SDM_FrostDK.step = 7
+            elseif SDM_FrostDK.step == 7 then
+                CastSpellByName("Усиление рунического оружия")
+                SDM_FrostDK.step = 8
+            else
+                CastSpellByName("Уничтожение")
+                SDM_FrostDK.step = (SDM_FrostDK.step >= 11) and 0 or SDM_FrostDK.step + 1
+            end
+
+            SDM_FrostDK.lastCast = GetTime()
+            return true
+        end
+
+        -- Стандартная ротация (с Ледяным ударом)
+        local function NormalRotation()
+            if RefreshDebuffs() then return end
+
+            -- Приоритеты:
+            -- 1. Уничтожение (есть руны)
+            -- 2. Ледяной удар (40+ Runic Power)
+            -- 3. Кровный удар
+            if IsSpellReady("Уничтожение") then
+                CastSpellByName("Уничтожение")
+            elseif GetRunicPower() >= 40 and IsSpellReady("Ледяной удар") then
+                CastSpellByName("Ледяной удар")
+            elseif IsSpellReady("Кровный удар") then
+                CastSpellByName("Кровный удар")
+            end
+        end
+
+        -- Выбор режима
+        if UnitClassification("target") == "worldboss" then
+            if not BossRotation() then NormalRotation() end
+        else
+            NormalRotation()
+        end
+    end)
+end
+
+-- Переключатель активности
+SDM_FrostDK.active = not SDM_FrostDK.active
+SDM_FrostDK.step = 0
+
+if SDM_FrostDK.active then
+    print("|cff00FF00[Frost DK] Авто-ротация активирована!")
+    SetMacroIcon(1, 136146) -- Иконка снежинки
+else
+    print("|cffFF0000[Frost DK] Авто-ротация остановлена!")
+    SetMacroIcon(1, 132394) -- Иконка меча
+end
